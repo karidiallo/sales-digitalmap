@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DigitalMap — Mapa Wyników</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=JetBrains+Mono:wght@500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0A0708;
+    --bg-2: #130E10;
+    --surface: #180F12;
+    --border: rgba(242,236,233,0.09);
+    --text: #F2ECE9;
+    --text-dim: #ADA6A8;
+    --wine: #9B2242;
+    --wine-bright: #C4335A;
+    --gold: #C98A3D;
+    --gold-bright: #E5A85C;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.6; padding:36px 20px 70px; }
+  .display { font-family:'Unbounded',sans-serif; letter-spacing:-0.02em; }
+  .mono { font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; text-transform:uppercase; font-size:0.7rem; }
+  .wrap { max-width:920px; margin:0 auto; }
+
+  .topbar { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:40px; }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-mark { width:34px; height:34px; border-radius:9px; background:linear-gradient(120deg,var(--wine),var(--wine-bright)); display:flex; align-items:center; justify-content:center; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; color:#fff; flex-shrink:0; }
+  .logo-word { font-family:'Unbounded',sans-serif; font-weight:700; font-size:1.05rem; }
+  .logo-word span { color:var(--wine-bright); }
+  .logo-sub { color:var(--text-dim); font-size:0.78rem; margin-top:2px; }
+  .status { font-size:0.78rem; color:var(--text-dim); text-align:right; }
+  .status b { color:var(--gold-bright); font-weight:600; }
+
+  h1 { font-family:'Unbounded',sans-serif; font-weight:700; font-size:1.7rem; margin:0 0 6px; }
+  .lede { color:var(--text-dim); font-size:0.92rem; margin-bottom:26px; }
+
+  .lead-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:30px; }
+  .lead-card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px 24px; }
+  .lead-card.active { border-color:rgba(196,51,90,0.35); background:linear-gradient(180deg,rgba(155,34,66,0.10),transparent); }
+  .lead-card .mono { color:var(--gold-bright); display:block; margin-bottom:10px; }
+  .lead-card input { width:100%; background:transparent; border:none; color:var(--text); font-family:'Unbounded',sans-serif; font-size:2.1rem; font-weight:700; padding:0; outline:none; }
+  .lead-card.active input { color:var(--wine-bright); }
+
+  .route { position:relative; padding-left:30px; }
+  .route-line { position:absolute; left:9px; top:12px; bottom:12px; width:2px; background:linear-gradient(180deg,var(--wine-bright),var(--border) 88%); }
+  .stop { position:relative; margin-bottom:8px; }
+  .stop-dot { position:absolute; left:-30px; top:24px; width:20px; height:20px; border-radius:50%; background:var(--bg); border:2px solid var(--wine-bright); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--wine-bright); font-weight:600; }
+  .stop-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .stop-info .mono { color:var(--text-dim); display:block; margin-bottom:8px; }
+  .stop-info input { width:100px; background:transparent; border:none; color:var(--text); font-family:'Unbounded',sans-serif; font-size:1.7rem; font-weight:700; padding:0; outline:none; }
+  .conv-badge { font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.04em; color:var(--text-dim); background:var(--bg-2); border:1px solid var(--border); border-radius:999px; padding:7px 14px; white-space:nowrap; }
+  .conv-badge.good { color:var(--gold-bright); border-color:rgba(229,168,92,0.35); }
+
+  .destination { margin-top:22px; padding:26px 28px; border-radius:20px; background:linear-gradient(160deg,rgba(201,138,61,0.12),rgba(201,138,61,0.02)); border:1px solid rgba(229,168,92,0.28); }
+  .destination .mono { color:var(--gold-bright); display:block; margin-bottom:16px; }
+  .dest-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .dest-card .mono { color:var(--text-dim); margin-bottom:8px; }
+  .dest-input-wrap { display:flex; align-items:baseline; gap:8px; }
+  .dest-card input { width:140px; background:transparent; border:none; color:var(--gold-bright); font-family:'Unbounded',sans-serif; font-size:2rem; font-weight:700; padding:0; outline:none; }
+  .dest-card .unit { color:var(--gold-bright); opacity:0.7; font-size:1rem; }
+
+  .actions { display:flex; gap:12px; margin-top:30px; flex-wrap:wrap; }
+  button { font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; border-radius:999px; padding:12px 22px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text); transition:all .15s ease; }
+  button:hover { border-color:var(--wine-bright); }
+  button.primary { background:linear-gradient(120deg,var(--wine),var(--wine-bright)); color:#fff; border:none; box-shadow:0 14px 30px -14px rgba(155,34,66,0.55); }
+  button.primary:hover { opacity:0.92; }
+  button.ghost { background:transparent; }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .history { margin-top:38px; }
+  .history h2 { font-family:'Unbounded',sans-serif; font-size:1.05rem; font-weight:700; margin:0 0 14px; }
+  .history-empty { color:var(--text-dim); font-size:0.85rem; background:var(--surface); border:1px dashed var(--border); border-radius:14px; padding:22px; text-align:center; }
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+  th,td { text-align:left; padding:10px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-weight:500; font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; }
+  td { font-family:'Unbounded',sans-serif; font-size:0.8rem; }
+  .del { color:var(--text-dim); cursor:pointer; font-family:'Inter',sans-serif; font-size:0.75rem; }
+  .del:hover { color:var(--wine-bright); }
+
+  .toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface); border:1px solid rgba(229,168,92,0.35); color:var(--gold-bright); padding:11px 20px; border-radius:999px; font-size:0.82rem; opacity:0; transition:all .25s ease; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error { border-color:rgba(196,51,90,0.5); color:var(--wine-bright); }
+
+  @media(max-width:520px){
+    .lead-row{grid-template-columns:1fr;}
+    .dest-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="lockScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
+  <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.1rem;">Digital<span style="color:var(--wine-bright)">Map</span> — Mapa Wyników</div>
+  <input type="password" id="lockInput" placeholder="Hasło" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.95rem;width:220px;text-align:center;outline:none;">
+  <button class="primary" id="lockBtn" style="width:220px;">Wejdź</button>
+  <div id="lockError" style="color:var(--wine-bright);font-size:0.8rem;display:none;">Złe hasło, spróbuj ponownie.</div>
+</div>
+
+<div class="wrap" id="dashboardWrap" style="display:none;">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">DM</div>
+      <div>
+        <div class="logo-word">Digital<span>Map</span></div>
+        <div class="logo-sub">Mapa Wyników</div>
+      </div>
+    </div>
+    <div class="status">Ostatni zapis <b id="lastSaved">—</b></div>
+  </div>
+
+  <h1>Lejek sprzedażowy</h1>
+  <p class="lede">Kliknij liczbę i wpisz nową wartość — zapisuje się automatycznie do bazy.</p>
+
+  <div class="lead-row">
+    <div class="lead-card active">
+      <span class="mono">Leady aktywne</span>
+      <input type="number" id="leady_aktywne" min="0">
+    </div>
+    <div class="lead-card">
+      <span class="mono" style="color:var(--text-dim)">Leady nieaktywne</span>
+      <input type="number" id="leady_nieaktywne" min="0">
+    </div>
+  </div>
+
+  <div class="route">
+    <div class="route-line"></div>
+
+    <div class="stop">
+      <div class="stop-dot">1</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Odpowiedzi</span><input type="number" id="odpowiedzi" min="0"></div>
+        <div class="conv-badge" id="conv1">z leadów —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">2</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Rozmowy</span><input type="number" id="rozmowy" min="0"></div>
+        <div class="conv-badge" id="conv2">z odpowiedzi —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">3</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Audyty</span><input type="number" id="audyty" min="0"></div>
+        <div class="conv-badge" id="conv3">z rozmów —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">4</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Oferty</span><input type="number" id="oferty" min="0"></div>
+        <div class="conv-badge" id="conv4">z audytów —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">5</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Klienci</span><input type="number" id="klienci" min="0"></div>
+        <div class="conv-badge good" id="conv5">z ofert —</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="destination">
+    <span class="mono">Przychód</span>
+    <div class="dest-row">
+      <div class="dest-card">
+        <span class="mono">Jednorazowy</span>
+        <div class="dest-input-wrap"><input type="number" id="przychod" min="0"><span class="unit">zł</span></div>
+      </div>
+      <div class="dest-card">
+        <span class="mono">MRR</span>
+        <div class="dest-input-wrap"><input type="number" id="mrr" min="0"><span class="unit">zł</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="snapshotBtn">Zapisz migawkę dnia</button>
+    <button class="ghost" id="resetBtn">Wyzeruj wszystko</button>
+  </div>
+
+  <div class="history">
+    <h2>Log dzienny</h2>
+    <div id="historyBody"><div class="history-empty">Ładowanie…</div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Zapisano</div>
+
+<script>
+// ====== KONFIGURACJA SUPABASE ======
+const SUPABASE_URL = "https://xrfhqkokkwyigsjmgmst.supabase.co";
+const SUPABASE_KEY = "sb_publishable__KJ8Sx0zPNYgy1Gxwj9HCw_gmrVNfSA";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const FIELDS = ['leady_aktywne','leady_nieaktywne','odpowiedzi','rozmowy','audyty','oferty','klienci','przychod','mrr'];
+const DEFAULTS = {leady_aktywne:50,leady_nieaktywne:0,odpowiedzi:0,rozmowy:0,audyty:0,oferty:0,klienci:0,przychod:0,mrr:0};
+let current = {...DEFAULTS};
+let history = [];
+let saveTimer = null;
+
+function el(id){return document.getElementById(id);}
+
+function showToast(msg, isError){
+  const t = el('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function pct(a,b){
+  if(!b || b<=0) return '—';
+  return Math.round((a/b)*100)+'%';
+}
+
+function renderConversions(){
+  const totalLeady = (current.leady_aktywne||0) + (current.leady_nieaktywne||0);
+  el('conv1').textContent = 'z leadów ' + pct(current.odpowiedzi, totalLeady);
+  el('conv2').textContent = 'z odpowiedzi ' + pct(current.rozmowy, current.odpowiedzi);
+  el('conv3').textContent = 'z rozmów ' + pct(current.audyty, current.rozmowy);
+  el('conv4').textContent = 'z audytów ' + pct(current.oferty, current.audyty);
+  el('conv5').textContent = 'z ofert ' + pct(current.klienci, current.oferty);
+}
+
+function renderInputs(){
+  FIELDS.forEach(f=>{ el(f).value = current[f]; });
+  renderConversions();
+}
+
+async function loadState(){
+  const { data: cur, error: curErr } = await sb.from('kpi_current').select('*').eq('id',1).single();
+  if(!curErr && cur){ current = {...DEFAULTS, ...cur}; }
+  renderInputs();
+
+  const { data: hist, error: histErr } = await sb.from('kpi_history').select('*').order('date',{ascending:true});
+  if(!histErr && hist){ history = hist; }
+  renderHistory();
+}
+
+async function persistCurrent(){
+  const payload = {id:1, ...current, updated_at: new Date().toISOString()};
+  const { error } = await sb.from('kpi_current').upsert(payload);
+  if(error){ showToast('Błąd zapisu: ' + error.message, true); return; }
+  const now = new Date();
+  el('lastSaved').textContent = now.toLocaleDateString('pl-PL') + ' ' + now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+  showToast('Zapisano');
+}
+
+FIELDS.forEach(f=>{
+  el(f).addEventListener('input', (e)=>{
+    current[f] = Number(e.target.value) || 0;
+    renderConversions();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistCurrent, 500);
+  });
+});
+
+el('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('Wyzerować wszystkie wartości bieżące?')) return;
+  current = {...DEFAULTS};
+  renderInputs();
+  await persistCurrent();
+});
+
+el('snapshotBtn').addEventListener('click', async ()=>{
+  const today = new Date().toISOString().slice(0,10);
+  const entry = {date: today, ...current};
+  const { error } = await sb.from('kpi_history').upsert(entry);
+  if(error){ showToast('Błąd migawki: ' + error.message, true); return; }
+  history = history.filter(h=>h.date!==today);
+  history.push(entry);
+  history.sort((a,b)=> a.date.localeCompare(b.date));
+  renderHistory();
+  showToast('Migawka zapisana');
+});
+
+function renderHistory(){
+  const body = el('historyBody');
+  if(!history.length){
+    body.innerHTML = '<div class="history-empty">Brak zapisanych dni. Kliknij „Zapisz migawkę dnia”, żeby zacząć śledzić trend.</div>';
+    return;
+  }
+  let rows = history.slice().reverse().map(h=>{
+    const total = (h.leady_aktywne||0)+(h.leady_nieaktywne||0);
+    return `<tr>
+      <td>${h.date}</td><td>${total}</td><td>${h.odpowiedzi||0}</td><td>${h.rozmowy||0}</td>
+      <td>${h.audyty||0}</td><td>${h.oferty||0}</td><td>${h.klienci||0}</td>
+      <td>${(h.przychod||0)} zł</td><td>${(h.mrr||0)} zł</td>
+      <td class="del" data-date="${h.date}">usuń</td>
+    </tr>`;
+  }).join('');
+  body.innerHTML = `<table>
+    <thead><tr><th>Data</th><th>Leady</th><th>Odp.</th><th>Rozm.</th><th>Aud.</th><th>Of.</th><th>Klienci</th><th>Przych.</th><th>MRR</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+  body.querySelectorAll('.del').forEach(d=>{
+    d.addEventListener('click', async ()=>{
+      const date = d.getAttribute('data-date');
+      const { error } = await sb.from('kpi_history').delete().eq('date', date);
+      if(error){ showToast('Błąd usuwania', true); return; }
+      history = history.filter(h=>h.date!==date);
+      renderHistory();
+    });
+  });
+}
+
+// ====== PROSTA BLOKADA HASŁEM ======
+// Zmień wartość poniżej na własne hasło. To nie jest prawdziwe
+// zabezpieczenie serwerowe — ktoś, kto zajrzy w kod strony, je zobaczy.
+// Ma tylko odstraszyć przypadkowe wejście.
+const DASH_PASSWORD = "digitalmap2026";
+
+function unlock(){
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('dashboardWrap').style.display = '';
+  loadState();
+}
+
+if(sessionStorage.getItem('dm_unlocked') === '1'){
+  unlock();
+} else {
+  document.getElementById('lockBtn').addEventListener('click', tryUnlock);
+  document.getElementById('lockInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
+  function tryUnlock(){
+    const val = document.getElementById('lockInput').value;
+    if(val === DASH_PASSWORD){
+      sessionStorage.setItem('dm_unlocked','1');
+      unlock();
+    } else {
+      document.getElementById('lockError').style.display = 'block';
+    }
+  }
+}
+</script>
+</body>
+</html>
