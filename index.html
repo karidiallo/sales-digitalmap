@@ -253,7 +253,7 @@ async function loadState(){
 
 async function persistCurrent(){
   const payload = {id:1, ...current, updated_at: new Date().toISOString()};
-  const { error } = await sb.from('kpi_current').upsert(payload);
+  const { error } = await sb.from('kpi_current').upsert(payload, { onConflict: 'id' });
   if(error){ showToast('Błąd zapisu: ' + error.message, true); return; }
   const now = new Date();
   el('lastSaved').textContent = now.toLocaleDateString('pl-PL') + ' ' + now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
@@ -279,7 +279,7 @@ el('resetBtn').addEventListener('click', async ()=>{
 el('snapshotBtn').addEventListener('click', async ()=>{
   const today = new Date().toISOString().slice(0,10);
   const entry = {date: today, ...current};
-  const { error } = await sb.from('kpi_history').upsert(entry);
+  const { error } = await sb.from('kpi_history').upsert(entry, { onConflict: 'date' });
   if(error){ showToast('Błąd migawki: ' + error.message, true); return; }
   history = history.filter(h=>h.date!==today);
   history.push(entry);
