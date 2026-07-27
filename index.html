@@ -24,7 +24,7 @@
   body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.6; padding:36px 20px 70px; }
   .display { font-family:'Unbounded',sans-serif; letter-spacing:-0.02em; }
   .mono { font-family:'JetBrains Mono',monospace; letter-spacing:0.08em; text-transform:uppercase; font-size:0.7rem; }
-  .wrap { max-width:920px; margin:0 auto; }
+  .wrap { max-width:960px; margin:0 auto; }
 
   .topbar { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:40px; }
   .logo { display:flex; align-items:center; gap:12px; }
@@ -34,6 +34,7 @@
   .logo-sub { color:var(--text-dim); font-size:0.78rem; margin-top:2px; }
   .status { font-size:0.78rem; color:var(--text-dim); text-align:right; }
   .status b { color:var(--gold-bright); font-weight:600; }
+  .status .who { color:var(--wine-bright); font-weight:600; }
 
   h1 { font-family:'Unbounded',sans-serif; font-weight:700; font-size:1.7rem; margin:0 0 6px; }
   .lede { color:var(--text-dim); font-size:0.92rem; margin-bottom:26px; }
@@ -46,7 +47,7 @@
   .lead-card.active input { color:var(--wine-bright); }
 
   .route { position:relative; padding-left:30px; }
-  .route-line { position:absolute; left:9px; top:12px; bottom:12px; width:2px; background:linear-gradient(180deg,var(--wine-bright),var(--border) 88%); }
+  .route-line { position:absolute; left:9px; top:12px; bottom:12px; width:2px; background:linear-gradient(180deg,var(--wine-bright),var(--border) 92%); }
   .stop { position:relative; margin-bottom:8px; }
   .stop-dot { position:absolute; left:-30px; top:24px; width:20px; height:20px; border-radius:50%; background:var(--bg); border:2px solid var(--wine-bright); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--wine-bright); font-weight:600; }
   .stop-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
@@ -66,18 +67,29 @@
   .actions { display:flex; gap:12px; margin-top:30px; flex-wrap:wrap; }
   button { font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; border-radius:999px; padding:12px 22px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text); transition:all .15s ease; }
   button:hover { border-color:var(--wine-bright); }
-  button.primary { background:linear-gradient(120deg,var(--wine),var(--wine-bright)); color:#fff; border:none; box-shadow:0 14px 30px -14px rgba(155,34,66,0.55); }
-  button.primary:hover { opacity:0.92; }
   button.ghost { background:transparent; }
   button:disabled { opacity:0.5; cursor:not-allowed; }
 
+  .today-panel { margin-top:38px; }
+  .today-panel h2, .history h2 { font-family:'Unbounded',sans-serif; font-size:1.05rem; font-weight:700; margin:0 0 14px; }
+  .today-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+  .today-cell { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+  .today-cell .mono { color:var(--text-dim); display:block; margin-bottom:6px; }
+  .today-cell .val { font-family:'Unbounded',sans-serif; font-weight:700; font-size:1.3rem; }
+  .today-cell .val.pos { color:var(--gold-bright); }
+  .today-cell .val.neg { color:var(--wine-bright); }
+  .today-empty { color:var(--text-dim); font-size:0.85rem; background:var(--surface); border:1px dashed var(--border); border-radius:14px; padding:22px; text-align:center; }
+
   .history { margin-top:38px; }
-  .history h2 { font-family:'Unbounded',sans-serif; font-size:1.05rem; font-weight:700; margin:0 0 14px; }
   .history-empty { color:var(--text-dim); font-size:0.85rem; background:var(--surface); border:1px dashed var(--border); border-radius:14px; padding:22px; text-align:center; }
   table { width:100%; border-collapse:collapse; font-size:0.82rem; }
   th,td { text-align:left; padding:10px 10px; border-bottom:1px solid var(--border); }
   th { color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-weight:500; font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; }
-  td { font-family:'Unbounded',sans-serif; font-size:0.8rem; }
+  td { font-family:'Inter',sans-serif; font-size:0.82rem; }
+  td.field { font-family:'Unbounded',sans-serif; font-size:0.78rem; }
+  td.who { color:var(--wine-bright); font-weight:600; }
+  td.delta.pos { color:var(--gold-bright); }
+  td.delta.neg { color:var(--wine-bright); }
   .del { color:var(--text-dim); cursor:pointer; font-family:'Inter',sans-serif; font-size:0.75rem; }
   .del:hover { color:var(--wine-bright); }
 
@@ -96,7 +108,7 @@
 <div id="lockScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;">
   <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.1rem;">Digital<span style="color:var(--wine-bright)">Map</span> — Mapa Wyników</div>
   <input type="password" id="lockInput" placeholder="Hasło" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.95rem;width:220px;text-align:center;outline:none;">
-  <button class="primary" id="lockBtn" style="width:220px;">Wejdź</button>
+  <button class="primary" id="lockBtn" style="width:220px;background:linear-gradient(120deg,var(--wine),var(--wine-bright));color:#fff;border:none;">Wejdź</button>
   <div id="lockError" style="color:var(--wine-bright);font-size:0.8rem;display:none;">Złe hasło, spróbuj ponownie.</div>
 </div>
 
@@ -110,11 +122,11 @@
         <div class="logo-sub">Mapa Wyników</div>
       </div>
     </div>
-    <div class="status">Ostatni zapis <b id="lastSaved">—</b></div>
+    <div class="status">Zalogowana: <span class="who" id="whoAmI">—</span><br>Ostatni zapis <b id="lastSaved">—</b></div>
   </div>
 
   <h1>Lejek sprzedażowy</h1>
-  <p class="lede">Kliknij liczbę i wpisz nową wartość — zapisuje się automatycznie do bazy.</p>
+  <p class="lede">Kliknij liczbę i wpisz nową wartość — zapisuje się automatycznie do bazy i trafia do dziennego logu.</p>
 
   <div class="lead-row">
     <div class="lead-card active">
@@ -133,7 +145,7 @@
     <div class="stop">
       <div class="stop-dot">1</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Odpowiedzi</span><input type="number" id="odpowiedzi" min="0"></div>
+        <div class="stop-info"><span class="mono">Skontaktowani</span><input type="number" id="skontaktowani" min="0"></div>
         <div class="conv-badge" id="conv1">z leadów —</div>
       </div>
     </div>
@@ -141,32 +153,48 @@
     <div class="stop">
       <div class="stop-dot">2</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Rozmowy</span><input type="number" id="rozmowy" min="0"></div>
-        <div class="conv-badge" id="conv2">z odpowiedzi —</div>
+        <div class="stop-info"><span class="mono">Odpowiedzi</span><input type="number" id="odpowiedzi" min="0"></div>
+        <div class="conv-badge" id="conv2">ze skontakt. —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">3</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Audyty</span><input type="number" id="audyty" min="0"></div>
-        <div class="conv-badge" id="conv3">z rozmów —</div>
+        <div class="stop-info"><span class="mono">MiniMapa wysłana</span><input type="number" id="minimapa_wyslana" min="0"></div>
+        <div class="conv-badge" id="conv3">z odpowiedzi —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">4</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Oferty</span><input type="number" id="oferty" min="0"></div>
-        <div class="conv-badge" id="conv4">z audytów —</div>
+        <div class="stop-info"><span class="mono">Discovery</span><input type="number" id="discovery" min="0"></div>
+        <div class="conv-badge" id="conv4">z MiniMapy —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">5</div>
       <div class="stop-card">
+        <div class="stop-info"><span class="mono">Płatny audyt</span><input type="number" id="platny_audyt" min="0"></div>
+        <div class="conv-badge" id="conv5">z discovery —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">6</div>
+      <div class="stop-card">
+        <div class="stop-info"><span class="mono">Oferta wdrożenia</span><input type="number" id="oferta_wdrozenia" min="0"></div>
+        <div class="conv-badge" id="conv6">z audytów —</div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-dot">7</div>
+      <div class="stop-card">
         <div class="stop-info"><span class="mono">Klienci</span><input type="number" id="klienci" min="0"></div>
-        <div class="conv-badge good" id="conv5">z ofert —</div>
+        <div class="conv-badge good" id="conv7">z ofert —</div>
       </div>
     </div>
   </div>
@@ -186,12 +214,16 @@
   </div>
 
   <div class="actions">
-    <button class="primary" id="snapshotBtn">Zapisz migawkę dnia</button>
     <button class="ghost" id="resetBtn">Wyzeruj wszystko</button>
   </div>
 
+  <div class="today-panel">
+    <h2>Dzisiaj dodano</h2>
+    <div id="todayBody"><div class="today-empty">Ładowanie…</div></div>
+  </div>
+
   <div class="history">
-    <h2>Log dzienny</h2>
+    <h2>Log zdarzeń</h2>
     <div id="historyBody"><div class="history-empty">Ładowanie…</div></div>
   </div>
 
@@ -205,11 +237,20 @@ const SUPABASE_URL = "https://xrfhqkokkwyigsjmgmst.supabase.co";
 const SUPABASE_KEY = "sb_publishable__KJ8Sx0zPNYgy1Gxwj9HCw_gmrVNfSA";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const FIELDS = ['leady_aktywne','leady_nieaktywne','odpowiedzi','rozmowy','audyty','oferty','klienci','przychod','mrr'];
-const DEFAULTS = {leady_aktywne:50,leady_nieaktywne:0,odpowiedzi:0,rozmowy:0,audyty:0,oferty:0,klienci:0,przychod:0,mrr:0};
+const FIELDS = ['leady_aktywne','leady_nieaktywne','skontaktowani','odpowiedzi','minimapa_wyslana','discovery','platny_audyt','oferta_wdrozenia','klienci','przychod','mrr'];
+const DEFAULTS = {leady_aktywne:50,leady_nieaktywne:0,skontaktowani:0,odpowiedzi:0,minimapa_wyslana:0,discovery:0,platny_audyt:0,oferta_wdrozenia:0,klienci:0,przychod:0,mrr:0};
+
+const FIELD_LABELS = {
+  leady_aktywne:'Leady aktywne', leady_nieaktywne:'Leady nieaktywne', skontaktowani:'Skontaktowani',
+  odpowiedzi:'Odpowiedzi', minimapa_wyslana:'MiniMapa wysłana', discovery:'Discovery',
+  platny_audyt:'Płatny audyt', oferta_wdrozenia:'Oferta wdrożenia', klienci:'Klienci',
+  przychod:'Przychód', mrr:'MRR'
+};
+
 let current = {...DEFAULTS};
-let history = [];
-let saveTimer = null;
+let log = [];
+let saveTimers = {};
+let currentUser = null;
 
 function el(id){return document.getElementById(id);}
 
@@ -229,11 +270,13 @@ function pct(a,b){
 
 function renderConversions(){
   const totalLeady = (current.leady_aktywne||0) + (current.leady_nieaktywne||0);
-  el('conv1').textContent = 'z leadów ' + pct(current.odpowiedzi, totalLeady);
-  el('conv2').textContent = 'z odpowiedzi ' + pct(current.rozmowy, current.odpowiedzi);
-  el('conv3').textContent = 'z rozmów ' + pct(current.audyty, current.rozmowy);
-  el('conv4').textContent = 'z audytów ' + pct(current.oferty, current.audyty);
-  el('conv5').textContent = 'z ofert ' + pct(current.klienci, current.oferty);
+  el('conv1').textContent = 'z leadów ' + pct(current.skontaktowani, totalLeady);
+  el('conv2').textContent = 'ze skontakt. ' + pct(current.odpowiedzi, current.skontaktowani);
+  el('conv3').textContent = 'z odpowiedzi ' + pct(current.minimapa_wyslana, current.odpowiedzi);
+  el('conv4').textContent = 'z MiniMapy ' + pct(current.discovery, current.minimapa_wyslana);
+  el('conv5').textContent = 'z discovery ' + pct(current.platny_audyt, current.discovery);
+  el('conv6').textContent = 'z audytów ' + pct(current.oferta_wdrozenia, current.platny_audyt);
+  el('conv7').textContent = 'z ofert ' + pct(current.klienci, current.oferta_wdrozenia);
 }
 
 function renderInputs(){
@@ -246,15 +289,31 @@ async function loadState(){
   if(!curErr && cur){ current = {...DEFAULTS, ...cur}; }
   renderInputs();
 
-  const { data: hist, error: histErr } = await sb.from('kpi_history').select('*').order('date',{ascending:true});
-  if(!histErr && hist){ history = hist; }
+  const { data: rows, error: logErr } = await sb.from('kpi_log').select('*').order('created_at',{ascending:false}).limit(200);
+  if(!logErr && rows){ log = rows; }
+  renderToday();
   renderHistory();
 }
 
-async function persistCurrent(){
+async function persistField(field, oldValue, newValue){
   const payload = {id:1, ...current, updated_at: new Date().toISOString()};
   const { error } = await sb.from('kpi_current').upsert(payload, { onConflict: 'id' });
   if(error){ showToast('Błąd zapisu: ' + error.message, true); return; }
+
+  const entry = {
+    user_name: currentUser,
+    field: field,
+    old_value: oldValue,
+    new_value: newValue,
+    delta: newValue - oldValue
+  };
+  const { data: inserted, error: logError } = await sb.from('kpi_log').insert(entry).select().single();
+  if(!logError && inserted){
+    log.unshift(inserted);
+    renderToday();
+    renderHistory();
+  }
+
   const now = new Date();
   el('lastSaved').textContent = now.toLocaleDateString('pl-PL') + ' ' + now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
   showToast('Zapisano');
@@ -262,84 +321,123 @@ async function persistCurrent(){
 
 FIELDS.forEach(f=>{
   el(f).addEventListener('input', (e)=>{
-    current[f] = Number(e.target.value) || 0;
+    const oldValue = current[f] || 0;
+    const newValue = Number(e.target.value) || 0;
+    current[f] = newValue;
     renderConversions();
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(persistCurrent, 500);
+    clearTimeout(saveTimers[f]);
+    saveTimers[f] = setTimeout(()=>persistField(f, oldValue, newValue), 500);
   });
 });
 
 el('resetBtn').addEventListener('click', async ()=>{
-  if(!confirm('Wyzerować wszystkie wartości bieżące?')) return;
+  if(!confirm('Wyzerować wszystkie wartości bieżące? Zapisze to zerowanie w logu dla każdego pola.')) return;
+  const old = {...current};
   current = {...DEFAULTS};
   renderInputs();
-  await persistCurrent();
+  const payload = {id:1, ...current, updated_at: new Date().toISOString()};
+  const { error } = await sb.from('kpi_current').upsert(payload, { onConflict: 'id' });
+  if(error){ showToast('Błąd zapisu: ' + error.message, true); return; }
+  const entries = FIELDS.filter(f=>old[f] !== current[f]).map(f=>({
+    user_name: currentUser, field: f, old_value: old[f]||0, new_value: current[f]||0, delta: (current[f]||0)-(old[f]||0)
+  }));
+  if(entries.length){
+    const { data: inserted, error: logError } = await sb.from('kpi_log').insert(entries).select();
+    if(!logError && inserted){ log = [...inserted.reverse(), ...log]; }
+  }
+  renderToday();
+  renderHistory();
+  showToast('Wyzerowano');
 });
 
-el('snapshotBtn').addEventListener('click', async ()=>{
-  const today = new Date().toISOString().slice(0,10);
-  const entry = {date: today, ...current};
-  const { error } = await sb.from('kpi_history').upsert(entry, { onConflict: 'date' });
-  if(error){ showToast('Błąd migawki: ' + error.message, true); return; }
-  history = history.filter(h=>h.date!==today);
-  history.push(entry);
-  history.sort((a,b)=> a.date.localeCompare(b.date));
-  renderHistory();
-  showToast('Migawka zapisana');
-});
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function renderToday(){
+  const body = el('todayBody');
+  const today = todayStr();
+  const todays = log.filter(l => (l.created_at||'').slice(0,10) === today);
+  if(!todays.length){
+    body.innerHTML = '<div class="today-empty">Jeszcze żadnych zmian dzisiaj.</div>';
+    return;
+  }
+  const totals = {};
+  todays.forEach(l=>{ totals[l.field] = (totals[l.field]||0) + Number(l.delta||0); });
+  const cells = Object.keys(totals).map(f=>{
+    const v = totals[f];
+    const cls = v > 0 ? 'pos' : (v < 0 ? 'neg' : '');
+    const sign = v > 0 ? '+' : '';
+    return `<div class="today-cell"><span class="mono">${FIELD_LABELS[f]||f}</span><div class="val ${cls}">${sign}${v}</div></div>`;
+  }).join('');
+  body.innerHTML = `<div class="today-grid">${cells}</div>`;
+}
 
 function renderHistory(){
   const body = el('historyBody');
-  if(!history.length){
-    body.innerHTML = '<div class="history-empty">Brak zapisanych dni. Kliknij „Zapisz migawkę dnia”, żeby zacząć śledzić trend.</div>';
+  if(!log.length){
+    body.innerHTML = '<div class="history-empty">Brak zdarzeń w logu. Zmień dowolną wartość powyżej, żeby zacząć.</div>';
     return;
   }
-  let rows = history.slice().reverse().map(h=>{
-    const total = (h.leady_aktywne||0)+(h.leady_nieaktywne||0);
+  let rows = log.map(l=>{
+    const when = new Date(l.created_at);
+    const dateStr = when.toLocaleDateString('pl-PL') + ' ' + when.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+    const delta = Number(l.delta||0);
+    const deltaCls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
+    const deltaSign = delta > 0 ? '+' : '';
     return `<tr>
-      <td>${h.date}</td><td>${total}</td><td>${h.odpowiedzi||0}</td><td>${h.rozmowy||0}</td>
-      <td>${h.audyty||0}</td><td>${h.oferty||0}</td><td>${h.klienci||0}</td>
-      <td>${(h.przychod||0)} zł</td><td>${(h.mrr||0)} zł</td>
-      <td class="del" data-date="${h.date}">usuń</td>
+      <td>${dateStr}</td>
+      <td class="who">${l.user_name||'—'}</td>
+      <td class="field">${FIELD_LABELS[l.field]||l.field}</td>
+      <td>${l.old_value ?? 0} → ${l.new_value ?? 0}</td>
+      <td class="delta ${deltaCls}">${deltaSign}${delta}</td>
+      <td class="del" data-id="${l.id}">usuń</td>
     </tr>`;
   }).join('');
   body.innerHTML = `<table>
-    <thead><tr><th>Data</th><th>Leady</th><th>Odp.</th><th>Rozm.</th><th>Aud.</th><th>Of.</th><th>Klienci</th><th>Przych.</th><th>MRR</th><th></th></tr></thead>
+    <thead><tr><th>Kiedy</th><th>Kto</th><th>Pole</th><th>Zmiana</th><th>Delta</th><th></th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
   body.querySelectorAll('.del').forEach(d=>{
     d.addEventListener('click', async ()=>{
-      const date = d.getAttribute('data-date');
-      const { error } = await sb.from('kpi_history').delete().eq('date', date);
+      const id = d.getAttribute('data-id');
+      const { error } = await sb.from('kpi_log').delete().eq('id', id);
       if(error){ showToast('Błąd usuwania', true); return; }
-      history = history.filter(h=>h.date!==date);
+      log = log.filter(l=>String(l.id) !== String(id));
+      renderToday();
       renderHistory();
     });
   });
 }
 
-// ====== PROSTA BLOKADA HASŁEM ======
-// Zmień wartość poniżej na własne hasło. To nie jest prawdziwe
-// zabezpieczenie serwerowe — ktoś, kto zajrzy w kod strony, je zobaczy.
-// Ma tylko odstraszyć przypadkowe wejście.
-const DASH_PASSWORD = "digitalmap2026";
+// ====== LOGOWANIE DWUOSOBOWE ======
+// To nie jest prawdziwe zabezpieczenie serwerowe — ktoś, kto zajrzy w kod
+// strony, zobaczy hasła. Ma tylko odstraszyć przypadkowe wejście i podpisać
+// zmiany imieniem osoby, która je wprowadziła.
+const USERS = {
+  "diallo2026": "Kari",
+  "bilska2026": "Paulina"
+};
 
-function unlock(){
+function unlock(name){
+  currentUser = name;
+  el('whoAmI').textContent = name;
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('dashboardWrap').style.display = '';
   loadState();
 }
 
-if(sessionStorage.getItem('dm_unlocked') === '1'){
-  unlock();
+const savedUser = sessionStorage.getItem('dm_user');
+if(savedUser && USERS[sessionStorage.getItem('dm_pass')] === savedUser){
+  unlock(savedUser);
 } else {
   document.getElementById('lockBtn').addEventListener('click', tryUnlock);
   document.getElementById('lockInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
   function tryUnlock(){
     const val = document.getElementById('lockInput').value;
-    if(val === DASH_PASSWORD){
-      sessionStorage.setItem('dm_unlocked','1');
-      unlock();
+    const name = USERS[val];
+    if(name){
+      sessionStorage.setItem('dm_pass', val);
+      sessionStorage.setItem('dm_user', name);
+      unlock(name);
     } else {
       document.getElementById('lockError').style.display = 'block';
     }
