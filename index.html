@@ -39,8 +39,7 @@
   h1 { font-family:'Unbounded',sans-serif; font-weight:700; font-size:1.7rem; margin:0 0 6px; }
   .lede { color:var(--text-dim); font-size:0.92rem; margin-bottom:26px; }
 
-  .lead-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:30px; }
-  .lead-card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px 24px; }
+  .lead-card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px 24px; margin-bottom:30px; }
   .lead-card.active { border-color:rgba(196,51,90,0.35); background:linear-gradient(180deg,rgba(155,34,66,0.10),transparent); }
   .lead-card .mono { color:var(--gold-bright); display:block; margin-bottom:10px; }
   .lead-card input { width:100%; background:transparent; border:none; color:var(--text); font-family:'Unbounded',sans-serif; font-size:2.1rem; font-weight:700; padding:0; outline:none; }
@@ -98,7 +97,6 @@
   .toast.error { border-color:rgba(196,51,90,0.5); color:var(--wine-bright); }
 
   @media(max-width:520px){
-    .lead-row{grid-template-columns:1fr;}
     .dest-row{grid-template-columns:1fr;}
   }
 </style>
@@ -128,15 +126,9 @@
   <h1>Lejek sprzedażowy</h1>
   <p class="lede">Kliknij liczbę i wpisz nową wartość — zapisuje się automatycznie do bazy i trafia do dziennego logu.</p>
 
-  <div class="lead-row">
-    <div class="lead-card active">
-      <span class="mono">Leady aktywne</span>
-      <input type="number" id="leady_aktywne" min="0">
-    </div>
-    <div class="lead-card">
-      <span class="mono" style="color:var(--text-dim)">Leady nieaktywne</span>
-      <input type="number" id="leady_nieaktywne" min="0">
-    </div>
+  <div class="lead-card active">
+    <span class="mono">Firmy przeanalizowane</span>
+    <input type="number" id="firmy_przeanalizowane" min="0">
   </div>
 
   <div class="route">
@@ -145,56 +137,56 @@
     <div class="stop">
       <div class="stop-dot">1</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Skontaktowani</span><input type="number" id="skontaktowani" min="0"></div>
-        <div class="conv-badge" id="conv1">z leadów —</div>
+        <div class="stop-info"><span class="mono">Mini-audyty gotowe</span><input type="number" id="mini_audyty_gotowe" min="0"></div>
+        <div class="conv-badge" id="conv1">z firm —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">2</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Odpowiedzi</span><input type="number" id="odpowiedzi" min="0"></div>
-        <div class="conv-badge" id="conv2">ze skontakt. —</div>
+        <div class="stop-info"><span class="mono">Wiadomości gotowe</span><input type="number" id="wiadomosci_gotowe" min="0"></div>
+        <div class="conv-badge" id="conv2">z audytów —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">3</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">MiniMapa wysłana</span><input type="number" id="minimapa_wyslana" min="0"></div>
-        <div class="conv-badge" id="conv3">z odpowiedzi —</div>
+        <div class="stop-info"><span class="mono">Wiadomości wysłane</span><input type="number" id="wiadomosci_wyslane" min="0"></div>
+        <div class="conv-badge" id="conv3">z gotowych —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">4</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Discovery</span><input type="number" id="discovery" min="0"></div>
-        <div class="conv-badge" id="conv4">z MiniMapy —</div>
+        <div class="stop-info"><span class="mono">Odpowiedzi</span><input type="number" id="odpowiedzi" min="0"></div>
+        <div class="conv-badge" id="conv4">z wysłanych —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">5</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Płatny audyt</span><input type="number" id="platny_audyt" min="0"></div>
-        <div class="conv-badge" id="conv5">z discovery —</div>
+        <div class="stop-info"><span class="mono">Discovery Calls</span><input type="number" id="discovery_calls" min="0"></div>
+        <div class="conv-badge" id="conv5">z odpowiedzi —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">6</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Oferta wdrożenia</span><input type="number" id="oferta_wdrozenia" min="0"></div>
-        <div class="conv-badge" id="conv6">z audytów —</div>
+        <div class="stop-info"><span class="mono">Audyty sprzedane</span><input type="number" id="audyty_sprzedane" min="0"></div>
+        <div class="conv-badge" id="conv6">z discovery —</div>
       </div>
     </div>
 
     <div class="stop">
       <div class="stop-dot">7</div>
       <div class="stop-card">
-        <div class="stop-info"><span class="mono">Klienci</span><input type="number" id="klienci" min="0"></div>
-        <div class="conv-badge good" id="conv7">z ofert —</div>
+        <div class="stop-info"><span class="mono">Wdrożenia</span><input type="number" id="wdrozenia" min="0"></div>
+        <div class="conv-badge good" id="conv7">ze sprzedanych —</div>
       </div>
     </div>
   </div>
@@ -237,14 +229,13 @@ const SUPABASE_URL = "https://xrfhqkokkwyigsjmgmst.supabase.co";
 const SUPABASE_KEY = "sb_publishable__KJ8Sx0zPNYgy1Gxwj9HCw_gmrVNfSA";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const FIELDS = ['leady_aktywne','leady_nieaktywne','skontaktowani','odpowiedzi','minimapa_wyslana','discovery','platny_audyt','oferta_wdrozenia','klienci','przychod','mrr'];
-const DEFAULTS = {leady_aktywne:50,leady_nieaktywne:0,skontaktowani:0,odpowiedzi:0,minimapa_wyslana:0,discovery:0,platny_audyt:0,oferta_wdrozenia:0,klienci:0,przychod:0,mrr:0};
+const FIELDS = ['firmy_przeanalizowane','mini_audyty_gotowe','wiadomosci_gotowe','wiadomosci_wyslane','odpowiedzi','discovery_calls','audyty_sprzedane','wdrozenia','przychod','mrr'];
+const DEFAULTS = {firmy_przeanalizowane:2,mini_audyty_gotowe:2,wiadomosci_gotowe:1,wiadomosci_wyslane:0,odpowiedzi:0,discovery_calls:0,audyty_sprzedane:0,wdrozenia:0,przychod:0,mrr:0};
 
 const FIELD_LABELS = {
-  leady_aktywne:'Leady aktywne', leady_nieaktywne:'Leady nieaktywne', skontaktowani:'Skontaktowani',
-  odpowiedzi:'Odpowiedzi', minimapa_wyslana:'MiniMapa wysłana', discovery:'Discovery',
-  platny_audyt:'Płatny audyt', oferta_wdrozenia:'Oferta wdrożenia', klienci:'Klienci',
-  przychod:'Przychód', mrr:'MRR'
+  firmy_przeanalizowane:'Firmy przeanalizowane', mini_audyty_gotowe:'Mini-audyty gotowe', wiadomosci_gotowe:'Wiadomości gotowe',
+  wiadomosci_wyslane:'Wiadomości wysłane', odpowiedzi:'Odpowiedzi', discovery_calls:'Discovery Calls',
+  audyty_sprzedane:'Audyty sprzedane', wdrozenia:'Wdrożenia', przychod:'Przychód', mrr:'MRR'
 };
 
 let current = {...DEFAULTS};
@@ -269,14 +260,13 @@ function pct(a,b){
 }
 
 function renderConversions(){
-  const totalLeady = (current.leady_aktywne||0) + (current.leady_nieaktywne||0);
-  el('conv1').textContent = 'z leadów ' + pct(current.skontaktowani, totalLeady);
-  el('conv2').textContent = 'ze skontakt. ' + pct(current.odpowiedzi, current.skontaktowani);
-  el('conv3').textContent = 'z odpowiedzi ' + pct(current.minimapa_wyslana, current.odpowiedzi);
-  el('conv4').textContent = 'z MiniMapy ' + pct(current.discovery, current.minimapa_wyslana);
-  el('conv5').textContent = 'z discovery ' + pct(current.platny_audyt, current.discovery);
-  el('conv6').textContent = 'z audytów ' + pct(current.oferta_wdrozenia, current.platny_audyt);
-  el('conv7').textContent = 'z ofert ' + pct(current.klienci, current.oferta_wdrozenia);
+  el('conv1').textContent = 'z firm ' + pct(current.mini_audyty_gotowe, current.firmy_przeanalizowane);
+  el('conv2').textContent = 'z audytów ' + pct(current.wiadomosci_gotowe, current.mini_audyty_gotowe);
+  el('conv3').textContent = 'z gotowych ' + pct(current.wiadomosci_wyslane, current.wiadomosci_gotowe);
+  el('conv4').textContent = 'z wysłanych ' + pct(current.odpowiedzi, current.wiadomosci_wyslane);
+  el('conv5').textContent = 'z odpowiedzi ' + pct(current.discovery_calls, current.odpowiedzi);
+  el('conv6').textContent = 'z discovery ' + pct(current.audyty_sprzedane, current.discovery_calls);
+  el('conv7').textContent = 'ze sprzedanych ' + pct(current.wdrozenia, current.audyty_sprzedane);
 }
 
 function renderInputs(){
