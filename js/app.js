@@ -102,13 +102,17 @@ function currentStreak(){
 }
 
 async function logActivity(type, leadId=null, note=null){
-  await sb.from("activities").insert({
+  const { error } = await sb.from("activities").insert({
     user_id: currentUser.id,
     lead_id: leadId,
     type,
     xp: XP[type] ?? 0,
     note
   });
+  if(error){
+    console.error("activities insert error:", error);
+    throw error;
+  }
 }
 
 async function loadData(){
@@ -116,8 +120,14 @@ async function loadData(){
     sb.from("leads").select("*").order("created_at",{ascending:false}),
     sb.from("activities").select("*").order("created_at",{ascending:false})
   ]);
-  if(lr.error) console.error(lr.error);
-  if(ar.error) console.error(ar.error);
+  if(lr.error) {
+    console.error("leads load error:", lr.error);
+    toast(`Leads: ${lr.error.message}`);
+  }
+  if(ar.error) {
+    console.error("activities load error:", ar.error);
+    toast(`Activities: ${ar.error.message}`);
+  }
   leads = lr.data || [];
   activities = ar.data || [];
   renderAll();
@@ -316,8 +326,16 @@ async function completeFollowup(id){
     updated_at: new Date().toISOString()
   }).eq("id",id);
 
-  if(error){ toast("Błąd zapisu"); return; }
-  await logActivity("follow_up", id, lead.next_action);
+  if(error){
+    console.error("follow-up update error:", error);
+    toast(`Błąd follow-up: ${error.message}`);
+    return;
+  }
+  try {
+    await logActivity("follow_up", id, lead.next_action);
+  } catch(activityError) {
+    toast(`Follow-up zapisany, XP: ${activityError.message}`);
+  }
   toast("+15 XP · follow-up done");
   await loadData();
 }
@@ -330,7 +348,11 @@ async function snoozeLead(id, days){
     follow_up_at:d.toISOString(),
     updated_at:new Date().toISOString()
   }).eq("id",id);
-  if(error){toast("Błąd zapisu");return;}
+  if(error){
+    console.error("snooze update error:", error);
+    toast(`Błąd: ${error.message}`);
+    return;
+  }
   toast(`Przełożono +${days}d`);
   await loadData();
 }
@@ -355,8 +377,23 @@ async function saveLead(){
     follow_up_at:follow
   }).select().single();
 
-  if(error){console.error(error);toast("Błąd zapisu");return;}
-  await logActivity("lead_created", data.id, "Lead created");
+  if(error){
+    console.error("lead insert error:", error);
+    toast(`Błąd leada: ${error.message}`);
+    return;
+  }
+
+  try {
+    await logActivity("lead_created", data.id, "Lead created");
+  } catch(activityError) {
+    console.error("lead saved, activity failed:", activityError);
+    toast(`Lead zapisany, ale XP: ${activityError.message}`);
+    closeDrawerFn();
+    clearLeadForm();
+    await loadData();
+    return;
+  }
+
   closeDrawerFn();
   clearLeadForm();
   toast("Lead zapisany");
