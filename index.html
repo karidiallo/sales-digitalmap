@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>DigitalMap Sales OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css"/>
+</head>
+<body>
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="logo">DigitalMap <span>Sales OS</span></div>
+      <h1>Zaloguj się</h1>
+      <p>Twój prywatny dashboard sprzedażowy.</p>
+      <input id="email" type="email" placeholder="Email"/>
+      <input id="password" type="password" placeholder="Hasło"/>
+      <button id="loginBtn" class="btn primary">Zaloguj</button>
+      <div id="authError" class="error"></div>
+    </div>
+  </div>
+
+  <div id="appShell" class="app hidden">
+    <aside class="sidebar">
+      <div class="logo">DigitalMap<span>SALES OS</span></div>
+
+      <div class="profile">
+        <div class="profile-top">
+          <div class="level">Level <span id="sideLevel">1</span></div>
+          <div class="streak"><span id="streakValue">0</span> day streak</div>
+        </div>
+        <div class="xpbar"><span id="sideXp"></span></div>
+        <div class="xpmeta"><span id="sideXpText">0 XP</span><span id="sideXpGoal">100 XP</span></div>
+      </div>
+
+      <nav>
+        <button class="active" data-view="today">Today</button>
+        <button data-view="followups">Follow-ups <span class="navbadge" id="followupBadge">0</span></button>
+        <button data-view="leads">Leads</button>
+        <button data-view="journey">Journey</button>
+        <button data-view="progress">Progress</button>
+      </nav>
+
+      <button id="logoutBtn" class="logout">Wyloguj</button>
+    </aside>
+
+    <main>
+      <section id="today" class="view active">
+        <div class="topbar">
+          <div>
+            <h1>Today</h1>
+            <div class="meta">Najważniejsze ruchy sprzedażowe na dziś.</div>
+          </div>
+          <div class="actions">
+            <button class="btn addLeadBtn">+ Lead</button>
+            <button class="btn primary" data-go="followups">Follow-ups</button>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="metric"><div class="label">Level</div><div class="value" id="levelMain">1</div><div class="sub" id="levelSub">0 / 100 XP</div></div>
+          <div class="metric money"><div class="label">Earned this month</div><div class="value" id="revenueMonth">0 zł</div><div class="sub">won revenue</div></div>
+          <div class="metric hot"><div class="label">Overdue</div><div class="value" id="overdueCount">0</div><div class="sub">do zamknięcia</div></div>
+          <div class="metric"><div class="label">XP today</div><div class="value" id="xpToday">0</div><div class="sub">real actions only</div></div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div>
+            <div class="session">
+              <div class="session-head">
+                <div>
+                  <div class="kicker">Daily focus</div>
+                  <div class="session-title">Najważniejsze ruchy</div>
+                </div>
+                <div class="session-progress" id="focusCount">0</div>
+              </div>
+              <div id="focusList" class="quest-list"></div>
+            </div>
+
+            <div class="section">
+              <div class="card">
+                <div class="section-head">
+                  <h3>Today queue</h3>
+                  <button class="btn small" data-go="followups">View all</button>
+                </div>
+                <div id="todayQueue"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-stack">
+            <div class="money-card">
+              <div class="label">Revenue</div>
+              <div class="big" id="revenueBig">0 zł</div>
+              <div class="rows">
+                <div class="row"><span>Active opportunities</span><b id="activePipeline">0 zł</b></div>
+                <div class="row"><span>Decisions pending</span><b id="decisionCount">0</b></div>
+                <div class="row"><span>Avg. order value</span><b id="avgOrder">0 zł</b></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="kicker">Progress</div>
+              <h2 id="progressLevelCard">Level 1</h2>
+              <div class="xpbar"><span id="mainXp"></span></div>
+              <div class="xpmeta"><span id="mainXpText">0 XP</span><span id="mainXpGoal">100 XP</span></div>
+              <div class="activity-list">
+                <div class="activity"><span>Current streak</span><b id="currentStreak">0 days</b></div>
+                <div class="activity"><span>Sales won</span><b id="salesWon">0</b></div>
+                <div class="activity"><span>Leads total</span><b id="leadsTotal">0</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="followups" class="view">
+        <div class="topbar">
+          <div><h1>Follow-ups</h1><div class="meta">Jedna lista wszystkich ruchów do wykonania.</div></div>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary filterBtn" data-filter="all">All</button>
+          <button class="btn filterBtn" data-filter="overdue">Overdue</button>
+          <button class="btn filterBtn" data-filter="today">Today</button>
+          <button class="btn filterBtn" data-filter="upcoming">Upcoming</button>
+        </div>
+        <div id="followupList" class="followups"></div>
+      </section>
+
+      <section id="leads" class="view">
+        <div class="topbar">
+          <div><h1>Leads</h1><div class="meta">Baza leadów i research.</div></div>
+          <button class="btn primary addLeadBtn">+ Lead</button>
+        </div>
+        <div class="card">
+          <div id="leadTableWrap"></div>
+        </div>
+      </section>
+
+      <section id="journey" class="view">
+        <div class="topbar">
+          <div><h1>Journey</h1><div class="meta">Droga od sygnału do klienta.</div></div>
+        </div>
+        <div id="journeyBoard" class="kanban"></div>
+      </section>
+
+      <section id="progress" class="view">
+        <div class="topbar">
+          <div><h1>Progress</h1><div class="meta">Level, streak i wynik sprzedażowy.</div></div>
+        </div>
+        <div class="progress-grid">
+          <div class="progress-card"><div class="kicker">Level</div><div class="value" id="progressLevel">1</div></div>
+          <div class="progress-card"><div class="kicker">XP total</div><div class="value" id="progressXP">0</div></div>
+          <div class="progress-card"><div class="kicker">Current streak</div><div class="value" id="progressStreak">0</div></div>
+          <div class="progress-card"><div class="kicker">Sales won</div><div class="value" id="progressWon">0</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="backdrop" class="backdrop"></div>
+  <aside id="leadDrawer" class="drawer">
+    <div class="drawer-head">
+      <div><h2>Dodaj lead</h2></div>
+      <button id="closeDrawer" class="close">×</button>
+    </div>
+
+    <div class="form-grid">
+      <div><label>Firma</label><input id="leadCompany" class="field"/></div>
+
+      <div><label>Branża</label>
+        <select id="leadIndustry" class="field">
+          <option value="">Wybierz branżę</option>
+          <option>Medycyna estetyczna</option>
+          <option>Stomatologia</option>
+          <option>Beauty premium</option>
+          <option>Nieruchomości</option>
+          <option>Kancelaria / prawo</option>
+          <option>Lokalne usługi premium</option>
+          <option>E-commerce</option>
+          <option>SaaS / software</option>
+          <option>B2B services</option>
+          <option>Inne</option>
+        </select>
+      </div>
+
+      <div class="full"><label>Strona internetowa</label><input id="leadWebsite" class="field" placeholder="https://firma.pl"/></div>
+      <div class="full"><label>Instagram</label><input id="leadInstagram" class="field" placeholder="@firma lub link"/></div>
+      <div class="full"><label>Sygnał / problem</label><textarea id="leadSignal" class="field"></textarea></div>
+
+      <div><label>Etap</label>
+        <select id="leadStage" class="field">
+          <option value="NEW_SIGNAL">NOWY SYGNAŁ</option>
+          <option value="RESEARCHED">SPRAWDZONY</option>
+          <option value="READY">GOTOWY DO KONTAKTU</option>
+          <option value="CONTACTED">KONTAKT</option>
+          <option value="CONVERSATION">ROZMOWA</option>
+          <option value="DIAGNOSED">ZDIAGNOZOWANY</option>
+          <option value="PROPOSAL">PROPOZYCJA</option>
+          <option value="DECISION">DECYZJA</option>
+          <option value="CLIENT">KLIENT</option>
+          <option value="CLOSED">ZAMKNIĘTY</option>
+        </select>
+      </div>
+
+      <div><label>Produkt</label>
+        <select id="leadProduct" class="field">
+          <option value="">Brak</option>
+          <option>Mini Mapa</option>
+          <option>Mapa Start</option>
+          <option>Mapa Strategiczna</option>
+          <option>Mapa AI</option>
+          <option>Wdrożenie</option>
+          <option>Monitoring</option>
+        </select>
+      </div>
+
+      <div><label>Estimated value</label><input id="leadValue" type="number" min="0" step="1" class="field" placeholder="499"/></div>
+      <div><label>Next action</label><input id="leadNextAction" class="field" placeholder="Np. First touch"/></div>
+      <div class="full"><label>Follow-up date</label><input id="leadFollowUp" type="datetime-local" class="field"/></div>
+
+      <div class="full"><button id="saveLeadBtn" class="btn primary" style="width:100%">Zapisz lead</button></div>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
