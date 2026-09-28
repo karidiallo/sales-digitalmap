@@ -12,6 +12,7 @@ let currentUser = null;
 let leads = [];
 let activities = [];
 let followFilter = "all";
+let editingLeadId = null;
 
 const stageLabels = {
   NEW_SIGNAL: "NOWY SYGNAŁ",
@@ -167,11 +168,17 @@ function attentionLeads(){
 }
 
 function renderAttention(){
-  const items = attentionLeads();
-  attentionCount.textContent = items.length;
-  leadsTotalTop.textContent = leads.length;
+  const countEl = document.getElementById("attentionCount");
+  const totalEl = document.getElementById("leadsTotalTop");
+  const listEl = document.getElementById("attentionList");
 
-  attentionList.innerHTML = items.length ? `
+  const items = attentionLeads();
+
+  if(countEl) countEl.textContent = items.length;
+  if(totalEl) totalEl.textContent = leads.length;
+  if(!listEl) return;
+
+  listEl.innerHTML = items.length ? `
     <div class="attention-list">
       ${items.slice(0,6).map(({lead,reason}) => `
         <div class="attention-row">
@@ -183,22 +190,30 @@ function renderAttention(){
             <div class="attention-reason">${escapeHtml(reason)}</div>
             <div class="attention-meta">${escapeHtml(lead.next_action || "brak next action")}</div>
           </div>
-          <button class="btn small" onclick="showView('leads')">Uzupełnij</button>
+          <button class="btn small" onclick="openLeadEditor('${lead.id}')">Uzupełnij</button>
         </div>
       `).join("")}
     </div>
   ` : `<div class="smallmuted">Wszystkie aktywne leady mają next step, termin i podstawowe dane.</div>`;
 }
 
+function safeRender(name, fn){
+  try {
+    fn();
+  } catch (error) {
+    console.error(`Render error in ${name}:`, error);
+  }
+}
+
 function renderAll(){
-  renderMetrics();
-  renderAttention();
-  renderFocus();
-  renderTodayQueue();
-  renderFollowups();
-  renderLeads();
-  renderJourney();
-  renderProgress();
+  safeRender("metrics", renderMetrics);
+  safeRender("attention", renderAttention);
+  safeRender("focus", renderFocus);
+  safeRender("todayQueue", renderTodayQueue);
+  safeRender("followups", renderFollowups);
+  safeRender("leads", renderLeads);
+  safeRender("journey", renderJourney);
+  safeRender("progress", renderProgress);
 }
 
 function renderMetrics(){
@@ -242,8 +257,10 @@ function renderMetrics(){
   salesWon.textContent = won;
   progressWon.textContent = won;
   leadsTotal.textContent = leads.length;
-  leadsTotalTop.textContent = leads.length;
-  attentionCount.textContent = attentionLeads().length;
+  const leadsTotalTopEl = document.getElementById("leadsTotalTop");
+  const attentionCountEl = document.getElementById("attentionCount");
+  if(leadsTotalTopEl) leadsTotalTopEl.textContent = leads.length;
+  if(attentionCountEl) attentionCountEl.textContent = attentionLeads().length;
   progressXP.textContent = xp;
   followupBadge.textContent = leads.filter(l=>["overdue","today"].includes(followKind(l))).length;
 }
@@ -325,9 +342,23 @@ function renderFollowups(){
 }
 
 function renderLeads(){
-  leadTableWrap.innerHTML = leads.length ? `
+  const wrap = document.getElementById("leadTableWrap");
+  if(!wrap) return;
+
+  wrap.innerHTML = leads.length ? `
     <table>
-      <thead><tr><th>Firma</th><th>Branża</th><th>Miasto</th><th>Etap</th><th>WWW / IG</th><th>Next action</th><th>Follow-up</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Firma</th>
+          <th>Branża</th>
+          <th>Miasto</th>
+          <th>Etap</th>
+          <th>WWW / IG</th>
+          <th>Next action</th>
+          <th>Follow-up</th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody>${leads.map(l=>`
         <tr>
           <td><b>${escapeHtml(l.company)}</b></td>
@@ -337,6 +368,7 @@ function renderLeads(){
           <td>${linkCell(l)}</td>
           <td>${escapeHtml(l.next_action||"—")}</td>
           <td>${l.follow_up_at?formatDate(l.follow_up_at):"—"}</td>
+          <td><button class="btn small" onclick="openLeadEditor('${l.id}')">Edit</button></td>
         </tr>`).join("")}
       </tbody>
     </table>` : `<div class="smallmuted">Brak leadów. Dodaj pierwszy.</div>`;
@@ -433,8 +465,8 @@ async function saveLead(){
 
   const follow = leadFollowUp.value ? new Date(leadFollowUp.value).toISOString() : null;
 
-  const {data,error}=await sb.from("leads").insert({
-    user_id:currentUser.id,
+  const payload = {
+    user_id: currentUser.id,
     company,
     industry:leadIndustry.value || null,
     city:leadCity.value.trim() || null,
@@ -445,8 +477,26 @@ async function saveLead(){
     product:leadProduct.value || null,
     estimated_value:Number(leadValue.value||0),
     next_action:leadNextAction.value.trim() || null,
-    follow_up_at:follow
-  }).select().single();
+    follow_up_at:follow,
+    updated_at:new Date().toISOString()
+  };
+
+  if(editingLeadId){
+    const {error}=await sb.from("leads").update(payload).eq("id",editingLeadId);
+    if(error){
+      console.error("lead update error:", error);
+      toast(`Błąd edycji: ${error.message}`);
+      return;
+    }
+
+    closeDrawerFn();
+    clearLeadForm();
+    toast("Lead zaktualizowany");
+    await loadData();
+    return;
+  }
+
+  const {data,error}=await sb.from("leads").insert(payload).select().single();
 
   if(error){
     console.error("lead insert error:", error);
@@ -472,11 +522,46 @@ async function saveLead(){
 }
 
 function clearLeadForm(){
-  ["leadCompany","leadCity","leadWebsite","leadInstagram","leadSignal","leadValue","leadNextAction","leadFollowUp"].forEach(id=>document.getElementById(id).value="");
+  editingLeadId = null;
+  ["leadCompany","leadCity","leadWebsite","leadInstagram","leadSignal","leadValue","leadNextAction","leadFollowUp"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
   leadIndustry.value="";
   leadStage.value="NEW_SIGNAL";
   leadProduct.value="";
+  saveLeadBtn.textContent="Zapisz lead";
 }
+
+function toLocalDateTimeInput(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openLeadEditor(id){
+  const lead = leads.find(l=>l.id===id);
+  if(!lead) return;
+
+  editingLeadId = id;
+
+  leadCompany.value = lead.company || "";
+  leadIndustry.value = lead.industry || "";
+  leadCity.value = lead.city || "";
+  leadWebsite.value = lead.website_url || "";
+  leadInstagram.value = lead.instagram_url || "";
+  leadSignal.value = lead.signal || "";
+  leadStage.value = lead.stage || "NEW_SIGNAL";
+  leadProduct.value = lead.product || "";
+  leadValue.value = lead.estimated_value || "";
+  leadNextAction.value = lead.next_action || "";
+  leadFollowUp.value = toLocalDateTimeInput(lead.follow_up_at);
+
+  saveLeadBtn.textContent = "Zapisz zmiany";
+  openDrawerFn();
+}
+window.openLeadEditor = openLeadEditor;
 
 function openDrawerFn(){leadDrawer.classList.add("open");backdrop.classList.add("show")}
 function closeDrawerFn(){leadDrawer.classList.remove("open");backdrop.classList.remove("show")}
