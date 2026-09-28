@@ -482,6 +482,14 @@ async function saveLead(){
   };
 
   if(editingLeadId){
+    const existing = leads.find(l => l.id === editingLeadId);
+    if(!existing){
+      console.error("Editing lead id not found:", editingLeadId);
+      editingLeadId = null;
+    }
+  }
+
+  if(editingLeadId){
     const {error}=await sb.from("leads").update(payload).eq("id",editingLeadId);
     if(error){
       console.error("lead update error:", error);
@@ -544,6 +552,7 @@ function openLeadEditor(id){
   const lead = leads.find(l=>l.id===id);
   if(!lead) return;
 
+  clearLeadForm();
   editingLeadId = id;
 
   leadCompany.value = lead.company || "";
@@ -563,8 +572,23 @@ function openLeadEditor(id){
 }
 window.openLeadEditor = openLeadEditor;
 
-function openDrawerFn(){leadDrawer.classList.add("open");backdrop.classList.add("show")}
-function closeDrawerFn(){leadDrawer.classList.remove("open");backdrop.classList.remove("show")}
+function openDrawerFn(){
+  leadDrawer.classList.add("open");
+  backdrop.classList.add("show");
+}
+
+function openNewLead(){
+  clearLeadForm();
+  editingLeadId = null;
+  saveLeadBtn.textContent = "Zapisz lead";
+  openDrawerFn();
+}
+
+function closeDrawerFn(){
+  leadDrawer.classList.remove("open");
+  backdrop.classList.remove("show");
+  clearLeadForm();
+}
 
 function showView(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
@@ -573,7 +597,7 @@ function showView(id){
 
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
 document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.go)));
-document.querySelectorAll(".addLeadBtn").forEach(b=>b.addEventListener("click",openDrawerFn));
+document.querySelectorAll(".addLeadBtn").forEach(b=>b.addEventListener("click",openNewLead));
 closeDrawer.addEventListener("click",closeDrawerFn);
 backdrop.addEventListener("click",closeDrawerFn);
 saveLeadBtn.addEventListener("click",saveLead);
@@ -623,3 +647,5 @@ boot();
 
 window.completeFollowup=completeFollowup;
 window.snoozeLead=snoozeLead;
+
+window.openNewLead = openNewLead;
