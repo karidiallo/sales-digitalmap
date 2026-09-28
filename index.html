@@ -59,11 +59,12 @@
           </div>
         </div>
 
-        <div class="summary">
+        <div class="summary summary-five">
           <div class="metric"><div class="label">Level</div><div class="value" id="levelMain">1</div><div class="sub" id="levelSub">0 / 100 XP</div></div>
           <div class="metric money"><div class="label">Earned this month</div><div class="value" id="revenueMonth">0 zł</div><div class="sub">won revenue</div></div>
-          <div class="metric hot"><div class="label">Overdue</div><div class="value" id="overdueCount">0</div><div class="sub">do zamknięcia</div></div>
-          <div class="metric"><div class="label">XP today</div><div class="value" id="xpToday">0</div><div class="sub">real actions only</div></div>
+          <div class="metric"><div class="label">Leads total</div><div class="value" id="leadsTotalTop">0</div><div class="sub">w bazie</div></div>
+          <div class="metric hot"><div class="label">Needs attention</div><div class="value" id="attentionCount">0</div><div class="sub">brak kroku / danych</div></div>
+          <div class="metric hot"><div class="label">Overdue</div><div class="value" id="overdueCount">0</div><div class="sub">po terminie</div></div>
         </div>
 
         <div class="dashboard-grid">
@@ -175,6 +176,7 @@
           <option value="">Wybierz branżę</option>
           <option>Medycyna estetyczna</option>
           <option>Stomatologia</option>
+          <option>Psycholog / Psychoterapia</option>
           <option>Beauty premium</option>
           <option>Nieruchomości</option>
           <option>Kancelaria / prawo</option>
@@ -185,6 +187,9 @@
           <option>Inne</option>
         </select>
       </div>
+
+      <div><label>Miasto</label><input id="leadCity" class="field" placeholder="Np. Poznań"/></div>
+      <div></div>
 
       <div class="full"><label>Strona internetowa</label><input id="leadWebsite" class="field" placeholder="https://firma.pl"/></div>
       <div class="full"><label>Instagram</label><input id="leadInstagram" class="field" placeholder="@firma lub link"/></div>
