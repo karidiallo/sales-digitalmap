@@ -133,8 +133,66 @@ async function loadData(){
   renderAll();
 }
 
+
+function isActiveLead(l){
+  return !["CLIENT","CLOSED"].includes(l.stage);
+}
+
+function missingProfileFields(l){
+  const missing = [];
+  if(!l.industry) missing.push("branża");
+  if(!l.city) missing.push("miasto");
+  if(!l.website_url && !l.instagram_url) missing.push("WWW / Instagram");
+  if(!l.signal) missing.push("sygnał / problem");
+  return missing;
+}
+
+function attentionReason(l){
+  if(!isActiveLead(l)) return null;
+
+  if(!l.next_action && !l.follow_up_at) return "Brak next stepu i terminu";
+  if(!l.next_action) return "Brak next stepu";
+  if(!l.follow_up_at) return "Brak terminu follow-upu";
+
+  const missing = missingProfileFields(l);
+  if(missing.length) return `Uzupełnij: ${missing.join(", ")}`;
+
+  return null;
+}
+
+function attentionLeads(){
+  return leads
+    .map(l => ({lead:l, reason:attentionReason(l)}))
+    .filter(x => x.reason);
+}
+
+function renderAttention(){
+  const items = attentionLeads();
+  attentionCount.textContent = items.length;
+  leadsTotalTop.textContent = leads.length;
+
+  attentionList.innerHTML = items.length ? `
+    <div class="attention-list">
+      ${items.slice(0,6).map(({lead,reason}) => `
+        <div class="attention-row">
+          <div>
+            <div class="company">${escapeHtml(lead.company)}</div>
+            <div class="attention-meta">${escapeHtml(lead.city || "brak miasta")} · ${escapeHtml(stageLabels[lead.stage] || lead.stage)}</div>
+          </div>
+          <div>
+            <div class="attention-reason">${escapeHtml(reason)}</div>
+            <div class="attention-meta">${escapeHtml(lead.next_action || "brak next action")}</div>
+          </div>
+          <button class="btn small" onclick="showView('leads')">Uzupełnij</button>
+        </div>
+      `).join("")}
+    </div>
+  ` : `<div class="smallmuted">Wszystkie aktywne leady mają next step, termin i podstawowe dane.</div>`;
+}
+
 function renderAll(){
   renderMetrics();
+  renderAttention();
   renderFocus();
   renderTodayQueue();
   renderFollowups();
@@ -184,6 +242,8 @@ function renderMetrics(){
   salesWon.textContent = won;
   progressWon.textContent = won;
   leadsTotal.textContent = leads.length;
+  leadsTotalTop.textContent = leads.length;
+  attentionCount.textContent = attentionLeads().length;
   progressXP.textContent = xp;
   followupBadge.textContent = leads.filter(l=>["overdue","today"].includes(followKind(l))).length;
 }
@@ -201,17 +261,26 @@ function priorityScore(l){
 
 function renderFocus(){
   const items = [...leads]
-    .filter(l=>l.next_action && ["overdue","today"].includes(followKind(l)))
-    .sort((a,b)=>priorityScore(b)-priorityScore(a))
+    .filter(l=>isActiveLead(l) && (
+      (!l.next_action || !l.follow_up_at) ||
+      (l.next_action && ["overdue","today"].includes(followKind(l)))
+    ))
+    .sort((a,b)=>{
+      const aa = attentionReason(a) ? 50 : 0;
+      const bb = attentionReason(b) ? 50 : 0;
+      return (priorityScore(b)+bb)-(priorityScore(a)+aa);
+    })
     .slice(0,4);
 
   focusCount.textContent = items.length;
   focusList.innerHTML = items.length ? items.map((l,i)=>`
     <div class="quest">
       <div class="qdot">${String(i+1).padStart(2,"0")}</div>
-      <div><b>${escapeHtml(l.company)} — ${escapeHtml(l.next_action)}</b><small>${followLabel(l)}</small></div>
-      <div class="qxp">+15 XP</div>
-      <button class="qbtn" onclick="completeFollowup('${l.id}')">Done</button>
+      <div><b>${escapeHtml(l.company)} — ${escapeHtml(l.next_action || "Ustal next step")}</b><small>${attentionReason(l) || followLabel(l)}</small></div>
+      <div class="qxp">${l.next_action && l.follow_up_at ? "+15 XP" : "ACTION"}</div>
+      ${l.next_action && l.follow_up_at
+        ? `<button class="qbtn" onclick="completeFollowup('${l.id}')">Done</button>`
+        : `<button class="qbtn" onclick="showView('leads')">Open</button>`}
     </div>
   `).join("") : `<div class="smallmuted">Brak pilnych ruchów. Możesz dodać nowe leady.</div>`;
 }
@@ -258,11 +327,12 @@ function renderFollowups(){
 function renderLeads(){
   leadTableWrap.innerHTML = leads.length ? `
     <table>
-      <thead><tr><th>Firma</th><th>Branża</th><th>Etap</th><th>WWW / IG</th><th>Next action</th><th>Follow-up</th></tr></thead>
+      <thead><tr><th>Firma</th><th>Branża</th><th>Miasto</th><th>Etap</th><th>WWW / IG</th><th>Next action</th><th>Follow-up</th></tr></thead>
       <tbody>${leads.map(l=>`
         <tr>
           <td><b>${escapeHtml(l.company)}</b></td>
           <td>${escapeHtml(l.industry||"—")}</td>
+          <td>${escapeHtml(l.city||"—")}</td>
           <td>${escapeHtml(stageLabels[l.stage]||l.stage)}</td>
           <td>${linkCell(l)}</td>
           <td>${escapeHtml(l.next_action||"—")}</td>
@@ -367,6 +437,7 @@ async function saveLead(){
     user_id:currentUser.id,
     company,
     industry:leadIndustry.value || null,
+    city:leadCity.value.trim() || null,
     website_url:leadWebsite.value.trim() || null,
     instagram_url:leadInstagram.value.trim() || null,
     signal:leadSignal.value.trim() || null,
@@ -401,7 +472,7 @@ async function saveLead(){
 }
 
 function clearLeadForm(){
-  ["leadCompany","leadWebsite","leadInstagram","leadSignal","leadValue","leadNextAction","leadFollowUp"].forEach(id=>document.getElementById(id).value="");
+  ["leadCompany","leadCity","leadWebsite","leadInstagram","leadSignal","leadValue","leadNextAction","leadFollowUp"].forEach(id=>document.getElementById(id).value="");
   leadIndustry.value="";
   leadStage.value="NEW_SIGNAL";
   leadProduct.value="";
